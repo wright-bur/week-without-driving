@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: only light;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino,
+    serif;
+  --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #171717;
+  background-color: #f7f3ee;
+  background-image: linear-gradient(180deg, rgba(231, 217, 207, 0.35), rgba(247, 243, 238, 0.85)),
+    var(--grain, none);
+  background-size: auto, 140px 140px;
+  background-blend-mode: multiply;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, rgba(0, 0, 0, 0) 0);
+  background-size: 3px 3px;
+  opacity: 0.2;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.input-base {
+  @apply w-full rounded-2xl border border-amber-200/60 bg-white/80 px-4 py-3 text-base text-ink shadow-sm focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember/20;
+}
+
+.section-card {
+  @apply rounded-3xl border border-amber-200/50 bg-white/80 p-6 shadow-card backdrop-blur-sm;
+}
+
+.tag-chip {
+  @apply inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-white px-3 py-1 text-sm font-medium text-dusk;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full bg-ember px-6 py-3 font-semibold text-white shadow-card transition hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-ember/30;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-amber-300 bg-white px-6 py-3 font-semibold text-ink transition hover:border-amber-400 hover:text-ember focus:outline-none focus:ring-2 focus:ring-amber-300/40;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-full border border-transparent px-5 py-2 text-sm font-semibold text-dusk transition hover:border-amber-200 hover:text-ink focus:outline-none focus:ring-2 focus:ring-amber-200/40;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

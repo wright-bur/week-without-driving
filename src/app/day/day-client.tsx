@@ -1,0 +1,299 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  almostBrokeOptions,
+  surpriseOptions,
+  tripModeOptions,
+  tripTypeOptions
+} from "@/lib/constants";
+import type { DailyEntryInput, TripMode, TripType } from "@/types";
+
+const defaultEntry: DailyEntryInput = {
+  day: 1,
+  trip_type: null,
+  trip_mode: [],
+  almost_broke_tags: [],
+  almost_broke_text: null,
+  surprise: null,
+  publish_ok: false,
+  skipped: false
+};
+
+function toggleArrayValue<T>(arr: T[], value: T) {
+  return arr.includes(value)
+    ? arr.filter((item) => item !== value)
+    : [...arr, value];
+}
+
+export default function DayClient({ day }: { day: number }) {
+  const router = useRouter();
+  const storageKey = useMemo(() => `wwd-day-${day}`, [day]);
+  const [entry, setEntry] = useState<DailyEntryInput>({
+    ...defaultEntry,
+    day
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as DailyEntryInput;
+        setEntry({ ...defaultEntry, ...parsed, day });
+      } catch {
+        setEntry({ ...defaultEntry, day });
+      }
+    } else {
+      setEntry({ ...defaultEntry, day });
+    }
+  }, [day, storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(entry));
+  }, [entry, storageKey]);
+
+  const handleSubmit = async (skipped: boolean) => {
+    setError(null);
+    if (!skipped) {
+      if (!entry.trip_type || !entry.surprise) {
+        setError("Please answer the trip and surprise prompts.");
+        return;
+      }
+      if (
+        entry.trip_type !== "I didn't replace one" &&
+        entry.trip_mode.length === 0
+      ) {
+        setError("Please select at least one replacement mode.");
+        return;
+      }
+    }
+
+    setSaving(true);
+    try {
+      const supabaseBrowser = getSupabaseBrowserClient();
+      const { data: sessionData } = await supabaseBrowser.auth.getSession();
+      let session = sessionData.session;
+      if (!session) {
+        const { data, error: signInError } =
+          await supabaseBrowser.auth.signInAnonymously();
+        if (signInError) throw signInError;
+        session = data.session ?? null;
+      }
+      if (!session?.access_token) {
+        throw new Error("Missing session.");
+      }
+
+      const payload: DailyEntryInput = skipped
+        ? { ...defaultEntry, day, skipped: true, publish_ok: false }
+        : { ...entry, day, skipped: false };
+
+      const response = await fetch("/api/day", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error ?? "Unable to save today.");
+      }
+
+      localStorage.removeItem(storageKey);
+      if (day < 7) {
+        router.push(`/day/${day + 1}`);
+      } else {
+        router.push("/summary");
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <section className="section-card space-y-4">
+        <h2 className="font-serif text-2xl">What trip did you replace today?</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {tripTypeOptions.map((option) => (
+            <label
+              key={option}
+              className="flex cursor-pointer items-center gap-3 rounded-2xl border border-amber-200/60 bg-white/70 p-3 text-sm font-medium text-ink"
+            >
+              <input
+                type="radio"
+                name="trip_type"
+                value={option}
+                checked={entry.trip_type === option}
+                onChange={() =>
+                  setEntry((prev) => ({
+                    ...prev,
+                    trip_type: option as TripType
+                  }))
+                }
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-dusk">
+            What did you use instead?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {tripModeOptions.map((option) => (
+              <button
+                type="button"
+                key={option}
+                className={`tag-chip ${
+                  entry.trip_mode.includes(option)
+                    ? "border-ember text-ember"
+                    : "text-dusk"
+                }`}
+                onClick={() =>
+                  setEntry((prev) => ({
+                    ...prev,
+                    trip_mode: toggleArrayValue(prev.trip_mode, option as TripMode)
+                  }))
+                }
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section-card space-y-4">
+        <h2 className="font-serif text-2xl">What almost broke you?</h2>
+        <div className="flex flex-wrap gap-2">
+          {almostBrokeOptions.map((option) => (
+            <button
+              type="button"
+              key={option}
+              className={`tag-chip ${
+                entry.almost_broke_tags.includes(option)
+                  ? "border-ember text-ember"
+                  : "text-dusk"
+              }`}
+              onClick={() =>
+                setEntry((prev) => ({
+                  ...prev,
+                  almost_broke_tags: toggleArrayValue(
+                    prev.almost_broke_tags,
+                    option
+                  )
+                }))
+              }
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <div>
+          <label className="text-sm font-semibold text-dusk">
+            One sentence (no names, no locations):
+          </label>
+          <textarea
+            className="input-base mt-2 min-h-[110px]"
+            maxLength={160}
+            value={entry.almost_broke_text ?? ""}
+            onChange={(event) =>
+              setEntry((prev) => ({
+                ...prev,
+                almost_broke_text: event.target.value || null
+              }))
+            }
+            placeholder="One sentence (no names, no locations): ..."
+          />
+          <p className="mt-2 text-xs text-dusk">
+            {entry.almost_broke_text?.length ?? 0}/160 characters
+          </p>
+        </div>
+      </section>
+
+      <section className="section-card space-y-4">
+        <h2 className="font-serif text-2xl">What surprised you?</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {surpriseOptions.map((option) => (
+            <label
+              key={option}
+              className="flex cursor-pointer items-center gap-3 rounded-2xl border border-amber-200/60 bg-white/70 p-3 text-sm font-medium text-ink"
+            >
+              <input
+                type="radio"
+                name="surprise"
+                value={option}
+                checked={entry.surprise === option}
+                onChange={() =>
+                  setEntry((prev) => ({
+                    ...prev,
+                    surprise: option
+                  }))
+                }
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-card space-y-4">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h2 className="font-serif text-2xl">Publish permission</h2>
+            <p className="text-sm text-dusk">
+              It&rsquo;s okay to publish an anonymized 1-3 line card from today to
+              the public scroll.
+            </p>
+          </div>
+          <label className="flex items-center gap-3 text-sm font-semibold text-ink">
+            <input
+              type="checkbox"
+              checked={entry.publish_ok}
+              onChange={(event) =>
+                setEntry((prev) => ({
+                  ...prev,
+                  publish_ok: event.target.checked
+                }))
+              }
+            />
+            Allow
+          </label>
+        </div>
+        {entry.publish_ok ? (
+          <p className="rounded-2xl border border-amber-200/70 bg-amber-50 px-4 py-3 text-sm text-ember">
+            No names, streets, schools, employers, or specific places.
+          </p>
+        ) : null}
+      </section>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          className="btn-primary"
+          onClick={() => handleSubmit(false)}
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save & continue"}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={() => handleSubmit(true)}
+          disabled={saving}
+        >
+          Skip today
+        </button>
+        {error ? <p className="text-sm text-ember">{error}</p> : null}
+      </div>
+    </div>
+  );
+}
