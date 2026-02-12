@@ -150,25 +150,31 @@ export default function DayClient({ day }: { day: number }) {
             What did you use instead?
           </p>
           <div className="flex flex-wrap gap-2">
-            {tripModeOptions.map((option) => (
-              <button
-                type="button"
-                key={option}
-                className={`tag-chip ${
-                  entry.trip_mode.includes(option)
-                    ? "border-ember text-ember"
-                    : "text-dusk"
-                }`}
-                onClick={() =>
-                  setEntry((prev) => ({
-                    ...prev,
-                    trip_mode: toggleArrayValue(prev.trip_mode, option as TripMode)
-                  }))
-                }
-              >
-                {option}
-              </button>
-            ))}
+            {tripModeOptions.map((option) => {
+              const isSelected = entry.trip_mode.includes(option);
+              return (
+                <button
+                  type="button"
+                  key={option}
+                  role="checkbox"
+                  aria-checked={isSelected}
+                  className={`tag-chip cursor-pointer select-none ${
+                    isSelected ? "border-ember text-ember" : "text-dusk"
+                  }`}
+                  onClick={() =>
+                    setEntry((prev) => ({
+                      ...prev,
+                      trip_mode: toggleArrayValue(
+                        prev.trip_mode,
+                        option as TripMode
+                      )
+                    }))
+                  }
+                >
+                  {option}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -176,28 +182,31 @@ export default function DayClient({ day }: { day: number }) {
       <section className="section-card space-y-4">
         <h2 className="font-serif text-2xl">What almost broke you?</h2>
         <div className="flex flex-wrap gap-2">
-          {almostBrokeOptions.map((option) => (
-            <button
-              type="button"
-              key={option}
-              className={`tag-chip ${
-                entry.almost_broke_tags.includes(option)
-                  ? "border-ember text-ember"
-                  : "text-dusk"
-              }`}
-              onClick={() =>
-                setEntry((prev) => ({
-                  ...prev,
-                  almost_broke_tags: toggleArrayValue(
-                    prev.almost_broke_tags,
-                    option
-                  )
-                }))
-              }
-            >
-              {option}
-            </button>
-          ))}
+          {almostBrokeOptions.map((option) => {
+            const isSelected = entry.almost_broke_tags.includes(option);
+            return (
+              <button
+                type="button"
+                key={option}
+                role="checkbox"
+                aria-checked={isSelected}
+                className={`tag-chip cursor-pointer select-none ${
+                  isSelected ? "border-ember text-ember" : "text-dusk"
+                }`}
+                onClick={() =>
+                  setEntry((prev) => ({
+                    ...prev,
+                    almost_broke_tags: toggleArrayValue(
+                      prev.almost_broke_tags,
+                      option
+                    )
+                  }))
+                }
+              >
+                {option}
+              </button>
+            );
+          })}
         </div>
         <div>
           <label className="text-sm font-semibold text-dusk">
