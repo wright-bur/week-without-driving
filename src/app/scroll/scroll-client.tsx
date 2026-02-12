@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ConfessionalCard } from "@/components/ConfessionalCard";
 import { filterCardTypes, filterTags } from "@/lib/constants";
 
@@ -29,32 +29,35 @@ export default function ScrollClient() {
     [selectedTypes, selectedTags]
   );
 
-  const fetchCards = async (pageNumber: number, append: boolean) => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    params.set("page", pageNumber.toString());
-    params.set("limit", PAGE_SIZE.toString());
-    if (selectedTypes.length) params.set("types", selectedTypes.join(","));
-    if (selectedTags.length) params.set("tags", selectedTags.join(","));
+  const fetchCards = useCallback(
+    async (pageNumber: number, append: boolean) => {
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.set("page", pageNumber.toString());
+      params.set("limit", PAGE_SIZE.toString());
+      if (selectedTypes.length) params.set("types", selectedTypes.join(","));
+      if (selectedTags.length) params.set("tags", selectedTags.join(","));
 
-    const response = await fetch(`/api/scroll?${params.toString()}`);
-    if (!response.ok) {
+      const response = await fetch(`/api/scroll?${params.toString()}`);
+      if (!response.ok) {
+        setLoading(false);
+        return;
+      }
+      const payload = (await response.json()) as {
+        cards: ScrollCard[];
+        hasMore: boolean;
+      };
+      setCards((prev) => (append ? [...prev, ...payload.cards] : payload.cards));
+      setHasMore(payload.hasMore);
       setLoading(false);
-      return;
-    }
-    const payload = (await response.json()) as {
-      cards: ScrollCard[];
-      hasMore: boolean;
-    };
-    setCards((prev) => (append ? [...prev, ...payload.cards] : payload.cards));
-    setHasMore(payload.hasMore);
-    setLoading(false);
-  };
+    },
+    [selectedTags, selectedTypes]
+  );
 
   useEffect(() => {
     setPage(0);
     fetchCards(0, false);
-  }, [filtersKey]);
+  }, [filtersKey, fetchCards]);
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -71,7 +74,7 @@ export default function ScrollClient() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [page, hasMore, loading, filtersKey]);
+  }, [page, hasMore, loading, fetchCards]);
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) =>

@@ -14,7 +14,7 @@ export default function HomePage() {
               WEEK WITHOUT DRIVING CONFESSIONAL
             </h1>
             <p className="text-xl font-semibold text-ember">
-              "Not a streak. A reckoning."
+              &ldquo;Not a streak. A reckoning.&rdquo;
             </p>
           </div>
           <div className="grid gap-6 text-lg text-ink/80 md:grid-cols-3">
