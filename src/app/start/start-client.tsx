@@ -12,17 +12,39 @@ export default function StartClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string) => {
+    let timeoutId: number | null = null;
+    const timeout = new Promise<T>((_resolve, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error(message));
+      }, ms);
+    });
+
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    }
+  };
+
   const handleStart = async () => {
     setError(null);
     setLoading(true);
     try {
       const supabaseBrowser = getSupabaseBrowserClient();
-      const { data: sessionData } = await supabaseBrowser.auth.getSession();
+      const { data: sessionData } = await withTimeout(
+        supabaseBrowser.auth.getSession(),
+        8000,
+        "Session check timed out. Please try again."
+      );
       let session = sessionData.session;
 
       if (!session) {
-        const { data, error: signInError } =
-          await supabaseBrowser.auth.signInAnonymously();
+        const { data, error: signInError } = await withTimeout(
+          supabaseBrowser.auth.signInAnonymously(),
+          8000,
+          "Anonymous sign-in timed out. Please try again."
+        );
         if (signInError) throw signInError;
         session = data.session ?? null;
       }
