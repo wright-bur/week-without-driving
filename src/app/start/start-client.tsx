@@ -31,6 +31,8 @@ export default function StartClient() {
         throw new Error("Unable to create an anonymous session.");
       }
 
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12000);
       const response = await fetch("/api/participants", {
         method: "POST",
         headers: {
@@ -40,17 +42,27 @@ export default function StartClient() {
         body: JSON.stringify({
           parent_status: parentStatus,
           area_type: areaType
-        })
+        }),
+        signal: controller.signal
       });
+      window.clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error("Failed to start your week.");
+        const payload = await response.json().catch(() => ({}));
+        const message =
+          payload?.error ??
+          "Failed to start your week. Please check your connection and try again.";
+        throw new Error(message);
       }
 
       router.push("/day/1");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      setError(message);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("This is taking longer than expected. Please try again.");
+      } else {
+        const message = err instanceof Error ? err.message : "Something went wrong";
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
