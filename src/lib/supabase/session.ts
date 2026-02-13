@@ -4,6 +4,10 @@ type StoredSession = {
   access_token?: string;
   expires_at?: number;
   refresh_token?: string;
+  user?: {
+    email?: string | null;
+    is_anonymous?: boolean | null;
+  };
 };
 
 function getProjectRef() {
@@ -37,6 +41,12 @@ export function getStoredAccessToken() {
     return null;
   }
   return session.access_token;
+}
+
+export function getStoredUserEmail() {
+  const session = getStoredSession();
+  const email = session?.user?.email;
+  return email ? email.toLowerCase() : null;
 }
 
 export async function ensureAccessToken() {

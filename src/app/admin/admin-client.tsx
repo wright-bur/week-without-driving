@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getStoredAccessToken } from "@/lib/supabase/session";
+import { getStoredAccessToken, getStoredUserEmail } from "@/lib/supabase/session";
 import { filterCardTypes, moderationTags } from "@/lib/constants";
 
 type PendingCard = {
@@ -36,7 +36,12 @@ export default function AdminClient() {
   useEffect(() => {
     const setup = async () => {
       const token = getStoredAccessToken();
-      if (token) setSessionToken(token);
+      const email = getStoredUserEmail();
+      if (token && email) {
+        setSessionToken(token);
+      } else {
+        setSessionToken(null);
+      }
     };
     setup();
 
@@ -44,7 +49,11 @@ export default function AdminClient() {
     const {
       data: { subscription }
     } = supabaseBrowser.auth.onAuthStateChange((_event, session) => {
-      setSessionToken(session?.access_token ?? null);
+      if (session?.access_token && session.user?.email) {
+        setSessionToken(session.access_token);
+      } else {
+        setSessionToken(null);
+      }
     });
 
     return () => subscription.unsubscribe();
