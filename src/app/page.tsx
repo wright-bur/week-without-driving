@@ -20,8 +20,9 @@ export default function HomePage() {
           <div className="grid gap-6 text-lg text-ink/80 md:grid-cols-3">
             <p>
               A seven-day reflection challenge for people trying one week without
-              driving. Each day is a small note to yourself about the trip you
-              replaced, what almost broke you, and what surprised you.
+              driving. Log any day in any order: a small note to yourself about
+              the trip you replaced, what almost broke you, and what surprised
+              you.
             </p>
             <p>
               When you opt in, we generate an anonymous confessional scroll card
@@ -36,7 +37,7 @@ export default function HomePage() {
           </div>
           <div className="flex flex-wrap gap-4">
             <Link className="btn-primary" href="/start">
-              Start my week
+              Start a reflection
             </Link>
             <Link className="btn-secondary" href="/scroll">
               Read the confessional scroll

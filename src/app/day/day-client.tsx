@@ -28,14 +28,19 @@ function toggleArrayValue<T>(arr: T[], value: T) {
     : [...arr, value];
 }
 
-export default function DayClient({ day }: { day: number }) {
+export default function DayClient({ initialDay }: { initialDay: number }) {
   const router = useRouter();
-  const storageKey = useMemo(() => `wwd-day-${day}`, [day]);
+  const [selectedDay, setSelectedDay] = useState(initialDay);
+  const storageKey = useMemo(
+    () => `wwd-day-${selectedDay}`,
+    [selectedDay]
+  );
   const [entry, setEntry] = useState<DailyEntryInput>({
     ...defaultEntry,
-    day
+    day: selectedDay
   });
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,14 +48,16 @@ export default function DayClient({ day }: { day: number }) {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as DailyEntryInput;
-        setEntry({ ...defaultEntry, ...parsed, day });
+        setEntry({ ...defaultEntry, ...parsed, day: selectedDay });
       } catch {
-        setEntry({ ...defaultEntry, day });
+        setEntry({ ...defaultEntry, day: selectedDay });
       }
     } else {
-      setEntry({ ...defaultEntry, day });
+      setEntry({ ...defaultEntry, day: selectedDay });
     }
-  }, [day, storageKey]);
+    setSaved(false);
+    setError(null);
+  }, [selectedDay, storageKey]);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(entry));
@@ -58,6 +65,7 @@ export default function DayClient({ day }: { day: number }) {
 
   const handleSubmit = async (skipped: boolean) => {
     setError(null);
+    setSaved(false);
     if (!skipped) {
       if (!entry.trip_type || !entry.surprise) {
         setError("Please answer the trip and surprise prompts.");
@@ -80,8 +88,8 @@ export default function DayClient({ day }: { day: number }) {
       }
 
       const payload: DailyEntryInput = skipped
-        ? { ...defaultEntry, day, skipped: true, publish_ok: false }
-        : { ...entry, day, skipped: false };
+        ? { ...defaultEntry, day: selectedDay, skipped: true, publish_ok: false }
+        : { ...entry, day: selectedDay, skipped: false };
 
       const response = await fetch("/api/day", {
         method: "POST",
@@ -98,11 +106,7 @@ export default function DayClient({ day }: { day: number }) {
       }
 
       localStorage.removeItem(storageKey);
-      if (day < 7) {
-        router.push(`/day/${day + 1}`);
-      } else {
-        router.push("/summary");
-      }
+      setSaved(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setError(message);
@@ -114,7 +118,36 @@ export default function DayClient({ day }: { day: number }) {
   return (
     <div className="space-y-8">
       <section className="section-card space-y-4">
-        <h2 className="font-serif text-2xl">What trip did you replace today?</h2>
+        <label className="text-sm font-semibold text-dusk">
+          Which day are you reflecting on?
+        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            className="input-base max-w-[160px]"
+            value={selectedDay}
+            onChange={(event) => {
+              const nextDay = Number(event.target.value);
+              if (Number.isInteger(nextDay)) {
+                setSelectedDay(nextDay);
+                router.replace(`/day/${nextDay}`);
+              }
+            }}
+          >
+            {Array.from({ length: 7 }).map((_, index) => (
+              <option key={index + 1} value={index + 1}>
+                Day {index + 1}
+              </option>
+            ))}
+          </select>
+          <p className="text-sm text-dusk">
+            You can log any day in any order.
+          </p>
+        </div>
+      </section>
+      <section className="section-card space-y-4">
+        <h2 className="font-serif text-2xl">
+          What trip did you replace on this day?
+        </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {tripTypeOptions.map((option) => (
             <label
@@ -253,8 +286,8 @@ export default function DayClient({ day }: { day: number }) {
           <div>
             <h2 className="font-serif text-2xl">Publish permission</h2>
             <p className="text-sm text-dusk">
-              It&rsquo;s okay to publish an anonymized 1-3 line card from today to
-              the public scroll.
+              It&rsquo;s okay to publish an anonymized 1-3 line card from this day
+              to the public scroll.
             </p>
           </div>
           <label className="flex items-center gap-3 text-sm font-semibold text-ink">
@@ -284,15 +317,18 @@ export default function DayClient({ day }: { day: number }) {
           onClick={() => handleSubmit(false)}
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save & continue"}
+          {saving ? "Saving..." : "Save entry"}
         </button>
         <button
           className="btn-secondary"
           onClick={() => handleSubmit(true)}
           disabled={saving}
         >
-          Skip today
+          Mark day skipped
         </button>
+        {saved ? (
+          <p className="text-sm text-dusk">Saved for Day {selectedDay}.</p>
+        ) : null}
         {error ? <p className="text-sm text-ember">{error}</p> : null}
       </div>
     </div>

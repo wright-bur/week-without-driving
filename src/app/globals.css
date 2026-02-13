@@ -61,11 +61,12 @@ a {
 }
 
 .section-card {
-  @apply rounded-3xl border border-amber-200/50 bg-white/80 p-6 shadow-card backdrop-blur-sm;
+  @apply relative z-10 rounded-3xl border border-amber-200/50 bg-white/80 p-6 shadow-card backdrop-blur-sm;
 }
 
 .tag-chip {
-  @apply inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-white px-3 py-1 text-sm font-medium text-dusk;
+  @apply pointer-events-auto inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-white px-3 py-1 text-sm font-medium text-dusk;
+  touch-action: manipulation;
 }
 
 .btn-primary {

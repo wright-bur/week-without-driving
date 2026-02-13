@@ -61,7 +61,7 @@ export default function StartClient() {
         const payload = await response.json().catch(() => ({}));
         const message =
           payload?.error ??
-          "Failed to start your week. Please check your connection and try again.";
+          "Failed to start your reflection. Please check your connection and try again.";
         throw new Error(message);
       }
 
@@ -117,7 +117,7 @@ export default function StartClient() {
           onClick={handleStart}
           disabled={loading}
         >
-          {loading ? "Starting..." : "Begin Day 1"}
+          {loading ? "Starting..." : "Open the day form"}
         </button>
         {error ? <p className="text-sm text-ember">{error}</p> : null}
       </div>
