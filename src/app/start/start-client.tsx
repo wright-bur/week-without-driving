@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ensureAccessToken } from "@/lib/supabase/session";
 import { areaTypeOptions, parentStatusOptions } from "@/lib/constants";
 
 export default function StartClient() {
@@ -31,25 +31,13 @@ export default function StartClient() {
     setError(null);
     setLoading(true);
     try {
-      const supabaseBrowser = getSupabaseBrowserClient();
-      const { data: sessionData } = await withTimeout(
-        supabaseBrowser.auth.getSession(),
+      const accessToken = await withTimeout(
+        ensureAccessToken(),
         8000,
-        "Session check timed out. Please try again."
+        "Anonymous sign-in timed out. Please try again."
       );
-      let session = sessionData.session;
 
-      if (!session) {
-        const { data, error: signInError } = await withTimeout(
-          supabaseBrowser.auth.signInAnonymously(),
-          8000,
-          "Anonymous sign-in timed out. Please try again."
-        );
-        if (signInError) throw signInError;
-        session = data.session ?? null;
-      }
-
-      if (!session?.access_token) {
+      if (!accessToken) {
         throw new Error("Unable to create an anonymous session.");
       }
 
@@ -59,7 +47,7 @@ export default function StartClient() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           parent_status: parentStatus,

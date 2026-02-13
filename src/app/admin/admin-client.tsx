@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getStoredAccessToken } from "@/lib/supabase/session";
 import { filterCardTypes, moderationTags } from "@/lib/constants";
 
 type PendingCard = {
@@ -34,11 +35,8 @@ export default function AdminClient() {
 
   useEffect(() => {
     const setup = async () => {
-      const supabaseBrowser = getSupabaseBrowserClient();
-      const { data } = await supabaseBrowser.auth.getSession();
-      if (data.session?.access_token) {
-        setSessionToken(data.session.access_token);
-      }
+      const token = getStoredAccessToken();
+      if (token) setSessionToken(token);
     };
     setup();
 

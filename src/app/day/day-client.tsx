@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ensureAccessToken } from "@/lib/supabase/session";
 import {
   almostBrokeOptions,
   surpriseOptions,
@@ -74,16 +74,8 @@ export default function DayClient({ day }: { day: number }) {
 
     setSaving(true);
     try {
-      const supabaseBrowser = getSupabaseBrowserClient();
-      const { data: sessionData } = await supabaseBrowser.auth.getSession();
-      let session = sessionData.session;
-      if (!session) {
-        const { data, error: signInError } =
-          await supabaseBrowser.auth.signInAnonymously();
-        if (signInError) throw signInError;
-        session = data.session ?? null;
-      }
-      if (!session?.access_token) {
+      const accessToken = await ensureAccessToken();
+      if (!accessToken) {
         throw new Error("Missing session.");
       }
 
@@ -95,7 +87,7 @@ export default function DayClient({ day }: { day: number }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${accessToken}`
         },
         body: JSON.stringify(payload)
       });

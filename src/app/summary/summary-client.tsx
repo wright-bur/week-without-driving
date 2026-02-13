@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ensureAccessToken } from "@/lib/supabase/session";
 
 type SummaryData = {
   replacedCount: number;
@@ -67,20 +67,12 @@ export default function SummaryClient() {
   useEffect(() => {
     const loadSummary = async () => {
       try {
-        const supabaseBrowser = getSupabaseBrowserClient();
-        const { data: sessionData } = await supabaseBrowser.auth.getSession();
-        let session = sessionData.session;
-        if (!session) {
-          const { data, error: signInError } =
-            await supabaseBrowser.auth.signInAnonymously();
-          if (signInError) throw signInError;
-          session = data.session ?? null;
-        }
-        if (!session?.access_token) throw new Error("Missing session.");
+        const accessToken = await ensureAccessToken();
+        if (!accessToken) throw new Error("Missing session.");
 
         const response = await fetch("/api/summary", {
           headers: {
-            Authorization: `Bearer ${session.access_token}`
+            Authorization: `Bearer ${accessToken}`
           }
         });
         if (!response.ok) {
@@ -133,16 +125,14 @@ export default function SummaryClient() {
     setWithdrawing(true);
     setError(null);
     try {
-      const supabaseBrowser = getSupabaseBrowserClient();
-      const { data: sessionData } = await supabaseBrowser.auth.getSession();
-      const session = sessionData.session;
-      if (!session?.access_token) {
+      const accessToken = await ensureAccessToken();
+      if (!accessToken) {
         throw new Error("Missing session.");
       }
       const response = await fetch("/api/withdraw", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${session.access_token}`
+          Authorization: `Bearer ${accessToken}`
         }
       });
       if (!response.ok) throw new Error("Unable to withdraw consent.");
