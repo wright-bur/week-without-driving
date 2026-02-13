@@ -174,30 +174,31 @@ export default function DayClient({ initialDay }: { initialDay: number }) {
           <p className="text-sm font-semibold text-dusk">
             What did you use instead?
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {tripModeOptions.map((option) => {
               const isSelected = entry.trip_mode.includes(option);
               return (
-                <button
-                  type="button"
+                <label
                   key={option}
-                  role="checkbox"
-                  aria-checked={isSelected}
-                  className={`tag-chip cursor-pointer select-none ${
-                    isSelected ? "border-ember text-ember" : "text-dusk"
+                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border border-amber-200/60 bg-white/70 p-3 text-sm font-medium ${
+                    isSelected ? "border-ember text-ember" : "text-ink"
                   }`}
-                  onClick={() =>
-                    setEntry((prev) => ({
-                      ...prev,
-                      trip_mode: toggleArrayValue(
-                        prev.trip_mode,
-                        option as TripMode
-                      )
-                    }))
-                  }
                 >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() =>
+                      setEntry((prev) => ({
+                        ...prev,
+                        trip_mode: toggleArrayValue(
+                          prev.trip_mode,
+                          option as TripMode
+                        )
+                      }))
+                    }
+                  />
                   {option}
-                </button>
+                </label>
               );
             })}
           </div>
@@ -206,30 +207,31 @@ export default function DayClient({ initialDay }: { initialDay: number }) {
 
       <section className="section-card space-y-4">
         <h2 className="font-serif text-2xl">What almost broke you?</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {almostBrokeOptions.map((option) => {
             const isSelected = entry.almost_broke_tags.includes(option);
             return (
-              <button
-                type="button"
+              <label
                 key={option}
-                role="checkbox"
-                aria-checked={isSelected}
-                className={`tag-chip cursor-pointer select-none ${
-                  isSelected ? "border-ember text-ember" : "text-dusk"
+                className={`flex cursor-pointer items-center gap-3 rounded-2xl border border-amber-200/60 bg-white/70 p-3 text-sm font-medium ${
+                  isSelected ? "border-ember text-ember" : "text-ink"
                 }`}
-                onClick={() =>
-                  setEntry((prev) => ({
-                    ...prev,
-                    almost_broke_tags: toggleArrayValue(
-                      prev.almost_broke_tags,
-                      option
-                    )
-                  }))
-                }
               >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() =>
+                    setEntry((prev) => ({
+                      ...prev,
+                      almost_broke_tags: toggleArrayValue(
+                        prev.almost_broke_tags,
+                        option
+                      )
+                    }))
+                  }
+                />
                 {option}
-              </button>
+              </label>
             );
           })}
         </div>

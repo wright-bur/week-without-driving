@@ -85,6 +85,74 @@ a {
   animation: fadeIn 0.8s ease both;
 }
 
+.ticker-shell {
+  @apply relative overflow-hidden rounded-3xl border border-amber-200/60 bg-white/60 py-6;
+}
+
+.ticker-shell::before,
+.ticker-shell::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ticker-shell::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(247, 243, 238, 0.95), rgba(247, 243, 238, 0));
+}
+
+.ticker-shell::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(247, 243, 238, 0.95), rgba(247, 243, 238, 0));
+}
+
+.ticker-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  padding: 8px 20px;
+  animation: tickerScroll 45s linear infinite;
+}
+
+.ticker-card {
+  min-width: 280px;
+  max-width: 280px;
+  border-radius: 24px;
+  border: 1px solid rgba(231, 217, 207, 0.7);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 16px 18px;
+  box-shadow: 0 20px 40px -30px rgba(23, 23, 23, 0.4);
+}
+
+.ticker-card-alt {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+@keyframes tickerScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .ticker-card {
+    scroll-snap-align: start;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

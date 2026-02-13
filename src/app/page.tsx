@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/Container";
+import ScrollTicker from "@/components/ScrollTicker";
 
 export default function HomePage() {
   return (
@@ -56,6 +57,20 @@ export default function HomePage() {
             If you include personal identifiers, we automatically redact obvious
             patterns and flag your card for extra review.
           </p>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-serif text-2xl text-ink">Confessional ticker</h2>
+            <Link className="btn-ghost" href="/scroll">
+              Open the full scroll
+            </Link>
+          </div>
+          <p className="text-sm text-dusk">
+            A living ribbon of approved notes. Quiet, anonymous, and always
+            moving.
+          </p>
+          <ScrollTicker />
         </section>
       </Container>
 
